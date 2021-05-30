@@ -1,0 +1,70 @@
+@import './mixin.scss';
+@import './config.scss';
+.container {
+  width: 1226px;
+  margin: 0 auto;
+}
+
+.clearfix:after{
+  content: ' ';
+  display: table;
+  clear: both;
+}
+
+.fl{
+  float: left;
+}
+.fr{
+  float: right;
+}
+// swiper出现滚动条
+// html {
+//   overflow-y: scroll;
+// }
+
+// :root {
+//   overflow-y: auto;
+//   overflow-x: hidden;
+// }
+
+// :root body {
+//   position: absolute;
+// }
+
+// body {
+//   overflow-x: hidden;
+// }
+.header-logo {
+  display: inline-block;
+  width: 55px;
+  height: 55px;
+  overflow: hidden;
+  a {
+    display: inline-block;
+    width: 110px;
+    height: 55px;
+    background: $colorA;
+    &:before {
+      content: ' ';
+      @include bgImg(55px,55px,'/imgs/mi-logo.png');
+      transition: margin .2s;
+    }
+    &:after {
+      content: ' ';
+      @include bgImg(55px,55px,'/imgs/mi-home.png');
+    }
+    &:hover:before {
+      margin-left: -55px;
+      transition: margin .2s;
+    }
+  }
+}
+.col-1{
+  flex: 1;
+}
+.col-2{
+  flex:2;
+}
+.col-3{
+  flex: 3;
+}

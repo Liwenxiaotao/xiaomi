@@ -68,13 +68,13 @@ export default new Router({
           path: 'pay',
           name: 'order-pay',
           component: OrderPay
-        }
+        },
+        {
+          path: 'alipay',
+          name: 'alipay',
+          component: Alipay
+        },
       ]
-    },
-    {
-      path: '/alipay',
-      name: 'alipay',
-      component: Alipay
     },
     {
       path: '/*',

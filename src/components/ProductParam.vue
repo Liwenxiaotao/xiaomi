@@ -1,15 +1,17 @@
 <!--  -->
 <template>
-  <div class="nav-bar" :class="{'is-fixed': isFixed}">
-    <div class="container">
-      <div class="pro-title">
-        {{title}}
-      </div>
-      <div class="pro-param">
-        <a href="javascript:;">概述</a><span>|</span>
-        <a href="javascript:;">参数</a><span>|</span>
-        <a href="javascript:;">用户评价</a>
-        <slot name="buy"></slot>
+  <div style="height: 70px;">
+    <div class="nav-bar" :class="{'is-fixed': isFixed}">
+      <div class="container">
+        <div class="pro-title">
+          {{title}}
+        </div>
+        <div class="pro-param">
+          <a href="javascript:;">概述</a><span>|</span>
+          <a href="javascript:;">参数</a><span>|</span>
+          <a href="javascript:;">用户评价</a>
+          <slot name="buy"></slot>
+        </div>
       </div>
     </div>
   </div>

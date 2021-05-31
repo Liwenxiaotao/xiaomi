@@ -26,25 +26,24 @@
           <div class="item-address">
             <h2 class="addr-title">收货地址</h2>
             <div class="address-list clearfix">
-              <div class="addr-info" v-for="(item, index) in list" :key="index">
+              <div class="addr-info" :class="{'checked': index==checkedIndex}" v-for="(item, index) in list" :key="index" @click="checkAddr(index)">
                 <h2>{{item.receiverName}}</h2>
                 <div class="phone">{{item.receiverMobile}}</div>
                 <div class="street">{{item.receiverProvince + ' ' + item.receiverCity + ' ' + item.receiverDistrict + ' ' + item.receiverAddress}}</div>
                 <div class="action">
-                  <a href="javascript:;" class="fl">
+                  <a href="javascript:;" class="fl" @click="delAddress(item)">
                     <svg class="icon icon-del"><use xlink:href="#icon-del"></use></svg>
                   </a>
-                  <a href="javascript:;" class="fr">
+                  <a href="javascript:;" class="fr" @click="editAddressModal(item)">
                     <svg class="icon icon-edit"><use xlink:href="#icon-edit"></use></svg>
                   </a>
                 </div>
               </div>
-              <div class="addr-add">
+              <div class="addr-add" @click="openAddressModal">
                 <div class="addr-add-wrap">
                   <div class="icon-add"></div>
                   <div>添加新地址</div>
                 </div>
-                <span></span>
               </div>
             </div>
           </div>
@@ -73,11 +72,11 @@
           <div class="detail">
             <div class="item">
               <span class="item-name">商品件数：</span>
-              <span class="item-val">1件</span>
+              <span class="item-val">{{count}}件</span>
             </div>
             <div class="item">
               <span class="item-name">商品总价：</span>
-              <span class="item-val">2599元</span>
+              <span class="item-val">{{cartTotalPrice}}元</span>
             </div>
             <div class="item">
               <span class="item-name">优惠活动：</span>
@@ -89,30 +88,89 @@
             </div>
             <div class="item-total">
               <span class="item-name">应付总额：</span>
-              <span class="item-val">2599元</span>
+              <span class="item-val">{{cartTotalPrice}}元</span>
             </div>
           </div>
           <div class="btn-group">
             <a href="/#/cart" class="btn btn-default btn-large">返回购物车</a>
-            <a href="javascript:;" class="btn btn-large">去结算</a>
+            <a href="javascript:;" class="btn btn-large" @click="orderSubmit">去结算</a>
           </div>
         </div>
       </div>
     </div>
+    <modal
+    title="删除确认"
+    btnType="1"
+    :showModal="showDelModal"
+    @cancel="showDelModal=false"
+    @submit="submitAddress"
+    >
+      <template v-slot:body>
+        确定要删除此地址吗？
+      </template>
+    </modal>
+    <modal
+    title="新增确认"
+    btnType="3"
+    :showModal="showEditModal"
+    @cancel="showEditModal=false"
+    @submit="submitAddress"
+    >
+      <template v-slot:body>
+        <div class="edit-wrap">
+          <div class="item">
+            <input type="text" class="input" placeholder="姓名" v-model="checkedAddress.receiverName">
+            <input type="text" class="input" placeholder="手机号" v-model="checkedAddress.receiverMobile">
+          </div>
+          <div class="item">
+            <select name="province" v-model="checkedAddress.receiverProvince" placeholder="省份">
+              <option value="北京">北京</option>
+              <option value="天津">天津</option>
+              <option value="湖北">湖北</option>
+            </select>
+            <select name="city" v-model="checkedAddress.receiverCity" placeholder="市">
+              <option value="北京">北京</option>
+              <option value="天津">天津</option>
+              <option value="武汉">武汉</option>
+            </select>
+            <select name="district" v-model="checkedAddress.receiverDistrict" placeholder="区">
+              <option value="区1">区1</option>
+              <option value="区2">区2</option>
+              <option value="区3">区3</option>
+            </select>
+          </div>
+          <div class="item">
+            <textarea name="street" placeholder="详细地址" v-model="checkedAddress.receiverAddress"></textarea>
+          </div>
+          <div class="item">
+            <input type="text" class="input" placeholder="邮编" v-model="checkedAddress.receiverZip">
+          </div>
+        </div>
+      </template>
+    </modal>
   </div>
 </template>
 
 <script>
+import Modal from '../components/Modal'
 export default {
   name: '',
   data() {
     return {
       list: [],
       cartList: [],
-      cartTotalPrice: 0
+      cartTotalPrice: 0,
+      count: 0,
+      checkedAddress: {},
+      userAction: 0,
+      showDelModal: false,
+      showEditModal: false,
+      checkedIndex: 0
     }
   },
-  components: {},
+  components: {
+    Modal
+  },
   computed: {},
   watch: {},
   created() {
@@ -124,6 +182,9 @@ export default {
     getAddressList() {
       this.axios.get('./shippings').then((res) => {
         this.list = res.list;
+        if (this.list.length) {
+          this.checkedIndex = (this.checkedIndex + this.list.length) % this.list.length;
+        }
       })
     },
     getCartList() {
@@ -131,7 +192,67 @@ export default {
         let list = res.cartProductVoList;
         this.cartTotalPrice = res.cartTotalPrice;
         this.cartList = list.filter(item => item.productSelected);
+        this.cartList.map((item) => {
+          this.count += item.quantity;
+        })
       })
+    },
+    orderSubmit() {
+      let item = this.list[this.checkedIndex];
+      if(!item) {
+        this.$message.error('请选择一个地址');
+        return;
+      }
+      this.axios.post('/orders', {
+        shippingId: item.id
+      }).then((res) => {
+        this.$router.push({
+          path: '/order/pay',
+          query: {
+            orderNo: res.orderNo
+          }
+        })
+      })
+    },
+    openAddressModal() {
+      this.showEditModal = true;
+      this.userAction = 0;
+      this.checkedAddress = {};
+    },
+    editAddressModal(item) {
+      this.showEditModal = true;
+      this.userAction = 1;
+      this.checkedAddress = item;
+    },
+    delAddress(item) {
+      this.checkedAddress = item;
+      this.userAction = 2;
+      this.showDelModal = true;
+    },
+    submitAddress() {
+      let {checkedAddress, userAction} = this;
+      let method, url;
+      if(userAction == 0) {
+        method = 'post', url='/shippings';
+      } else if(userAction == 1) {
+        method = 'put', url=`/shippings/${checkedAddress.id}`;
+      } else {
+        method = 'delete', url=`/shippings/${checkedAddress.id}`;
+      }
+      this.axios[method](url,checkedAddress).then(() => {
+        this.getAddressList();
+        this.closeModal();
+        this.$message.success('操作成功！')
+      })
+    },
+    checkAddr(index) {
+      this.checkedIndex = index;
+    },
+    closeModal() {
+      this.checkedAddress = {};
+      this.userAction = 0;
+      this.showDelModal = false;
+      this.showEditModal = false;
     }
   }
 }
@@ -199,12 +320,15 @@ export default {
               color: #999;
               /* position: relative; */
               line-height: 180px;
+              /* &:before{
+                content: ''
+              } */
               .addr-add-wrap{
                 display: inline-block;
                 vertical-align: middle;
                 line-height: 20px;
-                /* position: absolute;
-                left: 50%;
+               /* position: absolute;
+                /*left: 50%;
                 top: 50%;
                 transform: translate(-50%, -50%); */
                 .icon-add{
@@ -283,6 +407,36 @@ export default {
         .btn-group{
           margin-top: 37px;
           text-align: right;
+        }
+      }
+    }
+    .edit-wrap{
+      font-size: 14px;
+      .item{
+        margin-bottom: 15px;
+        .input{
+          width: 283px;
+          height: 40px;
+          line-height: 40px;
+          padding-left: 15px;
+          border: 1px solid #e5e5e5;
+          box-sizing: border-box;
+          &+.input{
+            margin-left: 14px;
+          }
+        }
+        select{
+          height: 40px;
+          line-height: 40px;
+          border: 1px solid #e5e5e5;
+          margin-right: 14px;
+        }
+        textarea{
+          height: 62px;
+          width: 100%;
+          padding: 13px 15px;
+          box-sizing: border-box;
+          border: 1px solid #e5e5e5;
         }
       }
     }

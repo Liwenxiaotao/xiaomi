@@ -112,9 +112,8 @@ export default {
               height: 100%;
               line-height: 16px;
               padding: 0px 15px;
-              border-right: 1px solid $colorC;
-              &:last-child{
-                border: none;
+              &+span {
+                border-left: 1px solid $colorC;
               }
             }
           }
